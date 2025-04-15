@@ -40,8 +40,11 @@
       color: #4a90e2;
       text-decoration: none;
     }
-    a:hover {
-      text-decoration: underline;
+    img {
+        max-width: 100%;   /* 限制图片最大宽度为容器宽度 */
+        height: auto;      /* 高度自动调整，保持图片比例 */
+        display: block;    /* 去掉图片底部可能出现的空隙 */
+        margin: 0 auto;    /* 图片居中显示 */
     }
   </style>
 </head>
@@ -50,13 +53,12 @@
     <h1>My Blog</h1>
     <nav>
       <ul>
-        <li><a href="/">Home</a></li>
         <li><a href="blog.html">Blog</a></li>
       </ul>
     </nav>
   </header>
 
-  <main>
+  <main>  
     <article>
       <h2>用电信公司客户数据做生存分析</h2>
       <div class="content">
@@ -121,6 +123,7 @@
         <p>第12、24、36个月时的累积NPV:</p>
         <img src="images/5.5.png">
         <p>绘制生存概率随时间的变化曲线如下:</p>
+        <img src="images/5.6.png">
         <!-- 更多报告内容可以继续放在这里 -->
       </div>
     </article>
