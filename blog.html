@@ -1,0 +1,135 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>My Blog | Tianche</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #f4f4f4;
+      margin: 0;
+      padding: 0;
+      color: #333;
+    }
+    header {
+      background-color: #4a90e2;
+      color: white;
+      padding: 2rem;
+      text-align: center;
+    }
+    main {
+      max-width: 800px;
+      margin: 2rem auto;
+      padding: 1rem;
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    h1, h2 {
+      margin-top: 0;
+    }
+    footer {
+      text-align: center;
+      padding: 1rem;
+      color: #777;
+      font-size: 0.9rem;
+    }
+    a {
+      color: #4a90e2;
+      text-decoration: none;
+    }
+    a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>My Blog</h1>
+    <nav>
+      <ul>
+        <li><a href="/">Home</a></li>
+        <li><a href="blog.html">Blog</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main>
+    <article>
+      <h2>用电信公司客户数据做生存分析</h2>
+      <div class="content">
+        <!-- 将报告内容嵌入在此 -->
+        <h3>第一部分</h3>
+        <p>我们现在有一个csv文件,内含电信公司客户的数据,每一列代表用户的一个属性,每一行代表一个用户,共21列7044行.下面展示其中的一行:</p>
+        <img src="images/1.1.png">
+        <p>首先创建sparksession,根据csv数据设置schema,读取数据,选择所有month-to-month的数据,把churn列从字符串变为boolean:</p>
+        <img src="images/1.2.png">
+        <img src="images/1.3.png">
+        <p>Bronze table:</p>
+        <img src="images/1.4.png">
+        <p>Silver table:</p>
+        <img src="images/1.5.png">
+        <p>第二部分:
+            首先把spark数据框转换为pandas数据框,便于处理.绘制kaplan-Meier 拟合曲线,得到生存率和时间的关系:
+            </p>
+        <img src="images/2.1.png">
+        <img src="images/2.2.png">
+        <p>选取一个协变量,绘制多种协变量取值下的拟合曲线,进行假设检验,以确定该协变量的影响是否显著.下图选取的协变量是性别:</p>
+        <img src="images/2.3.png">
+        <img src="images/2.4.png">
+        <p>下面选取的协变量是online security,它的影响显著:</p>
+        <img src="images/2.5.png">
+        <img src="images/2.6.png">
+        <p>最后计算internet service=DSL的用户的生存概率,如下表所示:</p>
+        <img src="images/2.7.png">
+        <img src="images/2.8.png">
+        <p>第三部分:
+            用cox比例风险模型,研究风险和协变量的关系.考虑风险(生存率的倒数),把风险分为基础风险和附加风险,定义风险比为基础风险/附加风险,当没有任何协变量时,风险比等于1,风险比例假设为风险比与时间无关
+            </p>
+        <img src="images/3.1.png">
+        <p>用coxPHfilter求每个变量的风险比,风险比表示了这个协变量对生存率的影响方向,如果显著性水平(p值)小于0.005则影响显著:</p>
+        <img src="images/3.2.png">
+        <p>从下表看出除了internet service,其他3个协变量的影响显著,而且都是使风险下降,其中onlineBackup_Yes风险下降的程度最高,表示如果用户购买了onlineBackup这个服务,那么他不流失的概率会增加不少:</p>
+        <img src="images/3.3.png">
+        <p>接下来用Schoenfeld Residuals法检验风险比例假设,原假设为基础风险和额外风险不成比例,当p值较大时候,可以拒绝原价设而使风险比例假设成立:</p>
+        <img src="images/3.4.png">
+        <p>表中km和rank是两种假设检验的方法.可以看到只有dependents的p值较大,其他都不服从风险比例假设,说明需要进一步优化模型:</p>
+        <img src="images/3.5.png">
+        <p>第四部分:
+            选择以下8个协变量,建立accelerate failure time(AFT)模型研究生存时间函数:
+            </p>
+        <img src="images/4.1.png">
+        <p>用AFT模型根据样本预测生存时间.S(t)=P(T>t),S(0)=1,且S随时间增大而减少,log-logistic模型的S(t)=1/(1+lambda*t^p).假设生存时间的对数服从log- logistic分布,建立AFT模型:</p>
+        <img src="images/4.2.png">
+        <p>可以看出除了internet service,其他协变量的影响均显著,这与cox模型的结果吻合.另外所有协变量的exp(coef)均大于1,表示它们都会使生存时间增加:</p>
+        <img src="images/4.3.png">
+        <p>接下来检验proportional odds假设,发现两条线不平行,不满足假设,因此不能直接使用AFT模型:</p>
+        <img src="images/4.4.png">
+        <img src="images/4.5.png">
+        <p>第五部分:
+            还是选择cox 比例风险模型来研究NPV(Net Present Value),选择原来的那5个列,不同的是,把churn从boolean改成float,也就是0/1.便于预测具体的价值:
+            </p>
+        <img src="images/5.1.png">
+        <p>部分数据如下:</p>
+        <img src="images/5.2.png">
+        <p>拟合cox比例风险模型:</p>
+        <img src="images/5.3.png">
+        <p>然后给定一组数据,研究这个样本的NPV随时间的关系:</p>
+        <img src="images/5.4.png">
+        <p>第12、24、36个月时的累积NPV:</p>
+        <img src="images/5.5.png">
+        <p>绘制生存概率随时间的变化曲线如下:</p>
+        <!-- 更多报告内容可以继续放在这里 -->
+      </div>
+    </article>
+  </main>
+
+  <footer>
+    &copy; 2025 Tianche | Hosted on GitHub Pages
+  </footer>
+</body>
+</html>
+
+
